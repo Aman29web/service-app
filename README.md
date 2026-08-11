@@ -1,4 +1,4 @@
-# ServiceHub – Services Marketplace
+# ServiceHub – Services Marketplace-
 
 ServiceHub is a three-sided services marketplace where customers can discover and book services, vendors can manage their services and availability, and admins can manage vendors, categories, bookings, payments, and permissions.
 
