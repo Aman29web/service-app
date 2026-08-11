@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_URL } from "../../services/config";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");

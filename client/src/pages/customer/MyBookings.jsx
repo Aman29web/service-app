@@ -6,8 +6,7 @@ import EmptyState from "../../components/common/EmptyState";
 import Pagination from "../../components/common/Pagination";
 import Button from "../../components/common/Button";
 import useAuth from "../../hooks/useAuth";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_URL } from "../../services/config";
 
 const MyBookings = () => {
   const { user, accessToken, logout } = useAuth();

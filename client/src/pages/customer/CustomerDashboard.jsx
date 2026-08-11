@@ -3,8 +3,7 @@ import { Link } from "react-router-dom";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import Loader from "../../components/common/Loader";
 import useAuth from "../../hooks/useAuth";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_URL } from "../../services/config";
 
 const CustomerDashboard = () => {
   const { user, accessToken, logout } = useAuth();

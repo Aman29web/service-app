@@ -2,9 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import Loader from "../../components/common/Loader";
-
-const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_URL } from "../../services/config";
 
 const ACCESS_TOKEN_KEY = "marketplace_access_token";
 const USER_KEY = "marketplace_user";

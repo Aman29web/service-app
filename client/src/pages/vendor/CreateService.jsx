@@ -5,6 +5,7 @@ import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
 import Loader from "../../components/common/Loader";
 import api from "../../services/api";
+import { API_URL } from "../../services/config";
 
 // const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 

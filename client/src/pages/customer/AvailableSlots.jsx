@@ -11,8 +11,7 @@ import Input from "../../components/common/Input";
 import Loader from "../../components/common/Loader";
 import EmptyState from "../../components/common/EmptyState";
 import useAuth from "../../hooks/useAuth";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_URL } from "../../services/config";
 
 const AvailableSlots = () => {
   const { user, logout } = useAuth();
