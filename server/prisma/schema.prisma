@@ -1,0 +1,249 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  passwordHash  String
+  roleId        String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  auditLogs     AuditLog[]
+  bookings      Booking[]      @relation("customerBookings")
+  payments      Payment[]      @relation("paymentUser")
+  refreshTokens RefreshToken[]
+  role          Role           @relation(fields: [roleId], references: [id])
+  vendorProfile VendorProfile?
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  description String?
+  permissions RolePermission[]
+  users       User[]
+}
+
+model RolePermission {
+  id         String @id @default(cuid())
+  roleId     String
+  permission String
+  role       Role   @relation(fields: [roleId], references: [id])
+
+  @@unique([roleId, permission])
+}
+
+model VendorProfile {
+  id              String       @id @default(cuid())
+  userId          String       @unique
+  businessName    String
+  phone           String
+  address         String
+  status          VendorStatus @default(PENDING)
+  rejectionReason String?
+  description     String?
+  timezone        String       @default("Asia/Kolkata")
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  bookings        Booking[]
+  services        Service[]
+  user            User         @relation(fields: [userId], references: [id])
+}
+
+model Category {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  parentId    String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  parent      Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryChildren")
+  services    Service[]
+}
+
+model Service {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  categoryId  String
+  vendorId    String
+  imageUrl    String?
+  status      ServiceStatus @default(DRAFT)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  bookings    Booking[]
+  offerings   Offering[]
+  category    Category      @relation(fields: [categoryId], references: [id])
+  vendor      VendorProfile @relation(fields: [vendorId], references: [id])
+}
+
+model Offering {
+  id                     String                  @id @default(cuid())
+  serviceId              String
+  name                   String
+  durationMinutes        Int
+  price                  Int
+  currency               String                  @default("INR")
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  availabilityExceptions AvailabilityException[]
+  availabilityRules      AvailabilityRule[]
+  bookings               Booking[]
+  service                Service                 @relation(fields: [serviceId], references: [id])
+}
+
+model AvailabilityRule {
+  id         String   @id @default(cuid())
+  offeringId String
+  weekday    Weekday
+  enabled    Boolean  @default(false)
+  windows    Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  offering   Offering @relation(fields: [offeringId], references: [id])
+}
+
+model AvailabilityException {
+  id         String        @id @default(cuid())
+  offeringId String
+  date       DateTime
+  type       ExceptionType
+  windows    Json
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  offering   Offering      @relation(fields: [offeringId], references: [id])
+}
+
+model Booking {
+  id                      String           @id @default(cuid())
+  serviceId               String
+  offeringId              String
+  customerId              String
+  vendorId                String
+  date                    DateTime
+  startTime               DateTime
+  endTime                 DateTime
+  amount                  Int
+  paymentMode             PaymentMode
+  status                  BookingStatus    @default(PENDING)
+  cancellationReason      String?
+  cancellationWindowHours Int              @default(24)
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  customer                User             @relation("customerBookings", fields: [customerId], references: [id])
+  offering                Offering         @relation(fields: [offeringId], references: [id])
+  service                 Service          @relation(fields: [serviceId], references: [id])
+  vendor                  VendorProfile    @relation(fields: [vendorId], references: [id])
+  history                 BookingHistory[]
+  payment                 Payment?
+
+  @@index([customerId])
+  @@index([vendorId])
+  @@index([status])
+  @@index([startTime])
+}
+
+model BookingHistory {
+  id        String        @id @default(cuid())
+  bookingId String
+  status    BookingStatus
+  note      String?
+  createdAt DateTime      @default(now())
+  booking   Booking       @relation(fields: [bookingId], references: [id])
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  bookingId         String        @unique
+  userId            String
+  amount            Int
+  mode              PaymentMode
+  status            PaymentStatus
+  providerReference String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  booking           Booking       @relation(fields: [bookingId], references: [id])
+  user              User          @relation("paymentUser", fields: [userId], references: [id])
+
+  @@index([status])
+  @@index([userId])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  action     String
+  targetType String?
+  targetId   String?
+  reason     String?
+  createdAt  DateTime @default(now())
+  actor      User     @relation(fields: [actorId], references: [id])
+
+  @@index([actorId])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+enum VendorStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ServiceStatus {
+  DRAFT
+  PUBLISHED
+  SUSPENDED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  REJECTED
+  CANCELLED
+  NO_SHOW
+}
+
+enum PaymentMode {
+  PAY_NOW
+  PAY_AFTER
+}
+
+enum PaymentStatus {
+  INITIATED
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum Weekday {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum ExceptionType {
+  CLOSED
+  OPEN
+}
