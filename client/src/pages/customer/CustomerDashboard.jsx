@@ -2,11 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import Loader from "../../components/common/Loader";
+import useAuth from "../../hooks/useAuth";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const CustomerDashboard = () => {
-  const [user, setUser] = useState(null);
+  const { user, accessToken, logout } = useAuth();
   const [stats, setStats] = useState({
     totalBookings: 0,
     pendingBookings: 0,
@@ -16,28 +17,16 @@ const CustomerDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch {
-        setUser(null);
-      }
-    }
-
     const loadDashboard = async () => {
       try {
-        const token = localStorage.getItem("accessToken");
-
-        if (!token) {
+        if (!accessToken) {
           setLoading(false);
           return;
         }
 
         const response = await fetch(`${API_URL}/customer/dashboard`, {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         });
 
@@ -59,7 +48,7 @@ const CustomerDashboard = () => {
     };
 
     loadDashboard();
-  }, []);
+  }, [accessToken]);
 
   const sidebarItems = [
     {
@@ -88,10 +77,7 @@ const CustomerDashboard = () => {
     },
   ];
 
-  const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("user");
-  };
+  const handleLogout = logout;
 
   if (loading) {
     return <Loader fullScreen text="Loading dashboard..." />;

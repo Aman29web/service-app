@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import DashboardLayout from "../../components/layout/DashboardLayout";
 import Loader from "../../components/common/Loader";
 import EmptyState from "../../components/common/EmptyState";
 import Pagination from "../../components/common/Pagination";
 import Button from "../../components/common/Button";
+import useAuth from "../../hooks/useAuth";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const MyBookings = () => {
+  const { user, accessToken, logout } = useAuth();
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
 
   const [status, setStatus] = useState("");
@@ -23,7 +27,7 @@ const MyBookings = () => {
       setLoading(true);
       setError("");
 
-      const token = localStorage.getItem("accessToken");
+      const token = accessToken;
 
       const params = new URLSearchParams({
         page: String(page),
@@ -66,6 +70,35 @@ const MyBookings = () => {
     }
   };
 
+  const sidebarItems = [
+    {
+      label: "Dashboard",
+      to: "/customer/dashboard",
+    },
+    {
+      label: "Browse Services",
+      to: "/services",
+    },
+    {
+      label: "My Bookings",
+      to: "/customer/bookings",
+      end: true,
+    },
+  ];
+
+  const navbarLinks = [
+    {
+      label: "Services",
+      to: "/services",
+    },
+    {
+      label: "My Bookings",
+      to: "/customer/bookings",
+    },
+  ];
+
+  const handleLogout = logout;
+
   useEffect(() => {
     loadBookings();
   }, [page, status]);
@@ -82,7 +115,7 @@ const MyBookings = () => {
     try {
       setCancellingId(bookingId);
 
-      const token = localStorage.getItem("accessToken");
+      const token = accessToken;
 
       const response = await fetch(
         `${API_URL}/bookings/${bookingId}/cancel`,
@@ -122,7 +155,13 @@ const MyBookings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
+    <DashboardLayout
+      user={user}
+      sidebarItems={sidebarItems}
+      navbarLinks={navbarLinks}
+      sidebarTitle="Customer"
+      onLogout={handleLogout}
+    >
       <div className="mx-auto max-w-6xl">
         <div className="mb-7">
           <h1 className="text-2xl font-bold text-slate-900">
@@ -173,9 +212,7 @@ const MyBookings = () => {
             title="No bookings found"
             description="You don't have any bookings matching this filter."
             actionLabel="Browse Services"
-            onAction={() =>
-              (window.location.href = "/services")
-            }
+            onAction={() => navigate("/services")}
           />
         ) : (
           <div className="space-y-4">
@@ -292,7 +329,7 @@ const MyBookings = () => {
           </div>
         )}
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

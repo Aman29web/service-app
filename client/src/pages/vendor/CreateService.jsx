@@ -4,8 +4,9 @@ import DashboardLayout from "../../components/layout/DashboardLayout";
 import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
 import Loader from "../../components/common/Loader";
+import api from "../../services/api";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+// const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const CreateService = () => {
   const navigate = useNavigate();
@@ -44,30 +45,40 @@ const CreateService = () => {
       }
     }
 
-    const loadCategories = async () => {
-      try {
-        const response = await fetch(`${API_URL}/categories`);
-        const data = await response.json();
+const loadCategories = async () => {
+  try {
+    const response = await api.get("/categories");
 
-        if (!response.ok) {
-          throw new Error(
-            data.message || "Unable to load categories."
-          );
-        }
+    console.log("CATEGORY RESPONSE:", response.data);
 
-        const result = data.data || data;
+    const data = response.data;
 
-        setCategories(
-          result.categories ||
-            result.items ||
-            (Array.isArray(result) ? result : [])
-        );
-      } catch (err) {
-        setError(err.message || "Unable to load categories.");
-      } finally {
-        setLoading(false);
-      }
-    };
+    const categoryList =
+      Array.isArray(data)
+        ? data
+        : Array.isArray(data?.data)
+        ? data.data
+        : Array.isArray(data?.data?.categories)
+        ? data.data.categories
+        : Array.isArray(data?.categories)
+        ? data.categories
+        : Array.isArray(data?.items)
+        ? data.items
+        : [];
+
+    console.log("CATEGORY LIST:", categoryList);
+
+    setCategories(categoryList);
+  } catch (err) {
+    console.error("CATEGORY ERROR:", err);
+    setError(
+      err.response?.data?.message ||
+        "Unable to load categories."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
     loadCategories();
   }, []);
@@ -146,31 +157,21 @@ const CreateService = () => {
 
       const token = localStorage.getItem("accessToken");
 
-      const response = await fetch(`${API_URL}/services`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          ...form,
-          offerings: offerings.map((item) => ({
-            ...item,
-            durationMinutes: Number(
-              item.durationMinutes
-            ),
-            price: Number(item.price),
-          })),
-        }),
-      });
+    const response = await api.post("/services", {
+  ...form,
+  offerings: offerings.map((item) => ({
+    ...item,
+    durationMinutes: Number(item.durationMinutes),
+    price: Number(item.price),
+  })),
+});
+     const data = response.data;
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message || "Unable to create service."
-        );
-      }
+if (!data?.success) {
+  throw new Error(
+    data?.message || "Unable to create service."
+  );
+}
 
       navigate("/vendor/services");
     } catch (err) {
@@ -283,14 +284,18 @@ const CreateService = () => {
                     Select category
                   </option>
 
-                  {categories.map((category) => (
-                    <option
-                      key={category.id}
-                      value={category.id}
-                    >
-                      {category.name}
+                  {categories.length === 0 ? (
+                    <option value="" disabled>
+                      No categories available. Add categories first.
                     </option>
-                  ))}
+                    
+                  ) : (
+                    categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
             </div>

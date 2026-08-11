@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import DashboardLayout from "../../components/layout/DashboardLayout";
 import Button from "../../components/common/Button";
 import Loader from "../../components/common/Loader";
 import EmptyState from "../../components/common/EmptyState";
+import useAuth from "../../hooks/useAuth";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const ServiceDetails = () => {
-  const { id } = useParams();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { id } = useParams();
 
   const [service, setService] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -54,8 +57,42 @@ const ServiceDetails = () => {
     );
   }
 
+  const sidebarItems = [
+    {
+      label: "Dashboard",
+      to: "/customer/dashboard",
+    },
+    {
+      label: "Browse Services",
+      to: "/services",
+    },
+    {
+      label: "My Bookings",
+      to: "/customer/bookings",
+    },
+  ];
+
+  const navbarLinks = [
+    {
+      label: "Services",
+      to: "/services",
+    },
+    {
+      label: "My Bookings",
+      to: "/customer/bookings",
+    },
+  ];
+
+  const handleLogout = logout;
+
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
+    <DashboardLayout
+      user={user}
+      sidebarItems={sidebarItems}
+      navbarLinks={navbarLinks}
+      sidebarTitle="Customer"
+      onLogout={handleLogout}
+    >
       <div className="mx-auto max-w-5xl">
         <Link
           to="/services"
@@ -167,7 +204,7 @@ const ServiceDetails = () => {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

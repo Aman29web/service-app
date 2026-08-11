@@ -64,6 +64,11 @@ export default function AppRoutes() {
 
       <Route
         path="/customer"
+        element={<Navigate to="/customer/dashboard" replace />}
+      />
+
+      <Route
+        path="/customer/dashboard"
         element={<CustomerRoute><CustomerDashboard /></CustomerRoute>}
       />
 

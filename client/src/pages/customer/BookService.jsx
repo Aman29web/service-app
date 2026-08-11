@@ -5,12 +5,15 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
+import DashboardLayout from "../../components/layout/DashboardLayout";
 import Button from "../../components/common/Button";
 import Loader from "../../components/common/Loader";
+import useAuth from "../../hooks/useAuth";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const BookService = () => {
+  const { user, accessToken, logout } = useAuth();
   const { id: serviceId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -62,7 +65,7 @@ const BookService = () => {
   }, [serviceId, offeringId]);
 
   const handleBooking = async () => {
-    const token = localStorage.getItem("accessToken");
+    const token = accessToken;
 
     if (!token) {
       navigate("/login", {
@@ -134,8 +137,42 @@ const BookService = () => {
     );
   }
 
+  const sidebarItems = [
+    {
+      label: "Dashboard",
+      to: "/customer/dashboard",
+    },
+    {
+      label: "Browse Services",
+      to: "/services",
+    },
+    {
+      label: "My Bookings",
+      to: "/customer/bookings",
+    },
+  ];
+
+  const navbarLinks = [
+    {
+      label: "Services",
+      to: "/services",
+    },
+    {
+      label: "My Bookings",
+      to: "/customer/bookings",
+    },
+  ];
+
+  const handleLogout = logout;
+
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
+    <DashboardLayout
+      user={user}
+      sidebarItems={sidebarItems}
+      navbarLinks={navbarLinks}
+      sidebarTitle="Customer"
+      onLogout={handleLogout}
+    >
       <div className="mx-auto max-w-2xl">
         <Link
           to={`/services/${serviceId}/slots?offering=${offeringId}`}
@@ -282,7 +319,7 @@ const BookService = () => {
           </Button>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
